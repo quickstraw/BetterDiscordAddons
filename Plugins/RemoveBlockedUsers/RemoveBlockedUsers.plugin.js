@@ -257,16 +257,19 @@ module.exports = (_ => {
 			}
 		
 			processMessages (e) {
+				console.log("I AM TESTING");
 				if (!this.settings.places.messages) return;
 				if (BDFDB.ArrayUtils.is(e.instance.props.channelStream)) {
-					let oldStream = e.instance.props.channelStream.filter(n => n.type != "MESSAGE_GROUP_BLOCKED"), newStream = [];
+					let oldStream = e.instance.props.channelStream.filter(n => n.type == "DIVIDER" || (n.content && n.content.author && n.content.author.id != 256312965282660353)), newStream = [];
 					if (oldStream.length != e.instance.props.channelStream.length) {
 						for (let i in oldStream) {
+							console.log("oldStream" + i);
 							let next = parseInt(i)+1;
 							if (oldStream[i].type != "DIVIDER" || (oldStream[next] && oldStream[i].type == "DIVIDER" && oldStream[next].type != "DIVIDER" && oldStream.slice(next).some(nextStream => nextStream.type != "DIVIDER"))) newStream.push(oldStream[i]);
 						}
 						let groupId, timestamp, author;
 						for (let i in newStream) {
+							console.log("I AM TESTING" + i);
 							if (newStream[i].type == "MESSAGE" && BDFDB.DiscordConstants.MessageTypeGroups.USER_MESSAGE.has(newStream[i].content.type) && groupId != newStream[i].groupId && timestamp && newStream[i].content.timestamp - timestamp < 600000) {
 								if (author && author.id == newStream[i].content.author.id && author.username == newStream[i].content.author.username) newStream[i] = Object.assign({}, newStream[i], {groupId: groupId});
 								author = newStream[i].content.author;
@@ -295,7 +298,15 @@ module.exports = (_ => {
 			processMessage (e) {
 				if (!this.settings.places.replies) return;
 				let repliedMessage = e.instance.props.childrenRepliedMessage;
+
+				if (repliedMessage && repliedMessage.props && repliedMessage.props.children && repliedMessage.props.children.props && repliedMessage.props.children.props.referencedMessage && repliedMessage.props.children.props.referencedMessage.message && repliedMessage.props.children.props.referencedMessage.message.author) {
+					if(repliedMessage.props.children.props.referencedMessage.message.author.id == 256312965282660353){
+						console.log("MATCH");
+					}
+				}
+
 				if (repliedMessage && repliedMessage.props && repliedMessage.props.children && repliedMessage.props.children.props && repliedMessage.props.children.props.referencedMessage && repliedMessage.props.children.props.referencedMessage.message && repliedMessage.props.children.props.referencedMessage.message.author && (256312965282660353 == repliedMessage.props.children.props.referencedMessage.message.author.id)) {
+					console.log("Processing message!");
 					delete e.instance.props.childrenRepliedMessage;
 					let header = e.instance.props.childrenHeader;
 					if (header && header.props) {
